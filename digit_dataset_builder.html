@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Digit Dataset Builder</title>
+  <style>
+    canvas {
+      border: 2px solid #333;
+      background-color: black;
+      cursor: crosshair;
+    }
+    #controls {
+      margin-top: 10px;
+    }
+    button {
+      font-size: 20px;
+      margin: 4px;
+      padding: 8px 14px;
+    }
+    .label-btn {
+      background-color: #eee;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>🖌️ Draw a Digit and Save It</h2>
+<p>Draw with your mouse, choose a label (0–9), and save it as a labeled 28x28 PNG image!</p>
+
+<canvas id="canvas" width="280" height="280"></canvas>
+<div id="controls">
+  <div>
+    <strong>Select Label:</strong><br>
+    <div id="labelButtons"></div>
+  </div>
+  <button onclick="clearCanvas()">🧹 Clear</button>
+  <button onclick="saveDigit()">💾 Save</button>
+</div>
+
+<script>
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const labelButtonsDiv = document.getElementById('labelButtons');
+  let drawing = false;
+  let currentLabel = 0;
+
+  // Initialize canvas
+  ctx.fillStyle = "black";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = "white";
+  ctx.lineWidth = 20;
+  ctx.lineCap = "round";
+
+  // Drawing handlers
+  canvas.addEventListener('mousedown', () => drawing = true);
+  canvas.addEventListener('mouseup', () => drawing = false);
+  canvas.addEventListener('mouseout', () => drawing = false);
+  canvas.addEventListener('mousemove', draw);
+
+  function draw(e) {
+    if (!drawing) return;
+    const rect = canvas.getBoundingClientRect();
+    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+  }
+
+  function clearCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  // Label buttons (0–9)
+  for (let i = 0; i <= 9; i++) {
+    const btn = document.createElement('button');
+    btn.innerText = i;
+    btn.className = 'label-btn';
+    btn.onclick = () => currentLabel = i;
+    labelButtonsDiv.appendChild(btn);
+  }
+
+  // Keyboard label support
+  document.addEventListener('keydown', e => {
+    if (e.key >= '0' && e.key <= '9') {
+      currentLabel = e.key;
+    }
+  });
+
+  function saveDigit() {
+    const smallCanvas = document.createElement('canvas');
+    smallCanvas.width = 28;
+    smallCanvas.height = 28;
+    const smallCtx = smallCanvas.getContext('2d');
+    smallCtx.drawImage(canvas, 0, 0, 28, 28);
+
+    const link = document.createElement('a');
+    const timestamp = Date.now();
+    link.download = `digit_${currentLabel}_${timestamp}.png`;
+    link.href = smallCanvas.toDataURL();
+    link.click();
+    clearCanvas();
+  }
+</script>
+
+</body>
+</html>
